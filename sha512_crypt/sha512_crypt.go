@@ -129,7 +129,7 @@ func (c *crypter) Generate(key, salt []byte) (result string, err error) {
 
 	// step 17-19
 	DS := sha512.New()
-	for i := uint8(0); i < 16+Asum[0]; i++ {
+	for i := 0; i < 16+int(Asum[0]); i++ {
 		DS.Write(salt)
 	}
 	DSsum := DS.Sum(nil)
