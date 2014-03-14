@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"crypto/sha512"
 	"strconv"
+	"sync"
 
 	"github.com/developermail/crypt"
 	"github.com/developermail/crypt/common"
@@ -49,157 +50,163 @@ func New() crypt.Crypter {
 	}
 }
 
-func (c *crypter) Generate(key, salt []byte) (string, error) {
-	var rounds int
-	var isRoundsDef bool
+func (c *crypter) Generate(key, salt []byte) (result string, err error) {
+	var (
+		wg sync.WaitGroup
+
+		rounds      int
+		isRoundsDef bool
+	)
 
 	if len(salt) == 0 {
-		salt = c.Salt.GenerateWRounds(SaltLenMax, RoundsDefault)
-	}
-	if !bytes.HasPrefix(salt, c.Salt.MagicPrefix) {
-		return "", common.ErrSaltPrefix
-	}
-
-	saltToks := bytes.Split(salt, []byte{'$'})
-	if len(saltToks) < 3 {
-		return "", common.ErrSaltFormat
-	}
-
-	if bytes.HasPrefix(saltToks[2], _rounds) {
-		isRoundsDef = true
-		pr, err := strconv.ParseInt(string(saltToks[2][7:]), 10, 32)
-		if err != nil {
-			return "", common.ErrSaltRounds
-		}
-		rounds = int(pr)
-		if rounds < RoundsMin {
-			rounds = RoundsMin
-		} else if rounds > RoundsMax {
-			rounds = RoundsMax
-		}
-		salt = saltToks[3]
-	} else {
+		salt = c.Salt.GenerateWRounds(SaltLenMax, RoundsDefault)[3:16]
 		rounds = RoundsDefault
-		salt = saltToks[2]
+	} else {
+		salt, rounds, isRoundsDef, err = c.parseSalt(salt)
+		if err != nil {
+			return
+		}
 	}
 
-	if len(salt) > 16 {
-		salt = salt[0:16]
-	}
-
-	// Compute alternate SHA512 sum with input KEY, SALT, and KEY.
-	Alternate := sha512.New()
-	Alternate.Write(key)
-	Alternate.Write(salt)
-	Alternate.Write(key)
-	AlternateSum := Alternate.Sum(nil) // 64 bytes
-
+	// step 1-3
 	A := sha512.New()
 	A.Write(key)
 	A.Write(salt)
-	// Add for any character in the key one byte of the alternate sum.
-	i := len(key)
-	for ; i > 64; i -= 64 {
-		A.Write(AlternateSum)
-	}
-	A.Write(AlternateSum[0:i])
 
-	// Take the binary representation of the length of the key and for every add
-	// the alternate sum, for every 0 the key.
-	for i = len(key); i > 0; i >>= 1 {
+	// step 4-8
+	B := sha512.New()
+	B.Write(key)
+	B.Write(salt)
+	B.Write(key)
+	Bsum := B.Sum(nil)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		B.Reset()
+	}()
+
+	// step 9-10
+	A.Write(c.sequence(Bsum, len(key)))
+
+	// step 11-12
+	for i := len(key); i > 0; i >>= 1 {
 		if (i & 1) != 0 {
-			A.Write(AlternateSum)
+			A.Write(Bsum)
 		} else {
 			A.Write(key)
 		}
 	}
 	Asum := A.Sum(nil)
 
-	// Start computation of P byte sequence.
-	P := sha512.New()
-	// For every character in the password add the entire password.
-	for i = 0; i < len(key); i++ {
-		P.Write(key)
-	}
-	Psum := P.Sum(nil)
-	// Create byte sequence P.
-	Pseq := make([]byte, 0, len(key))
-	for i = len(key); i > 64; i -= 64 {
-		Pseq = append(Pseq, Psum...)
-	}
-	Pseq = append(Pseq, Psum[0:i]...)
-
-	// Start computation of S byte sequence.
-	S := sha512.New()
-	for i = 0; i < (16 + int(Asum[0])); i++ {
-		S.Write(salt)
-	}
-	Ssum := S.Sum(nil)
-	// Create byte sequence S.
-	Sseq := make([]byte, 0, len(salt))
-	for i = len(salt); i > 64; i -= 64 {
-		Sseq = append(Sseq, Ssum...)
-	}
-	Sseq = append(Sseq, Ssum[0:i]...)
-
-	Csum := Asum
-
-	// Clean sensitive data.
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		A.Reset()
-		Alternate.Reset()
-		P.Reset()
-
-		for i = 0; i < len(Asum); i++ {
-			Asum[i] = 0
-		}
-		for i = 0; i < len(AlternateSum); i++ {
-			AlternateSum[i] = 0
-		}
 	}()
 
-	// Repeatedly run the collected hash value through SHA512 to burn CPU cycles.
-	for i = 0; i < rounds; i++ {
-		C := sha512.New()
+	// step 13-15
+	DP := sha512.New()
+	for i := 0; i < len(key); i++ {
+		DP.Write(key)
+	}
+	DPsum := DP.Sum(nil)
 
-		// Add key or last result.
-		if (i & 1) != 0 {
-			C.Write(Pseq)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		DP.Reset()
+	}()
+
+	// step 16
+	P := c.sequence(DPsum, len(key))
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		c.cleanSensitiveData(DPsum)
+	}()
+
+	// step 17-19
+	DS := sha512.New()
+	for i := uint8(0); i < 16+Asum[0]; i++ {
+		DS.Write(salt)
+	}
+	DSsum := DS.Sum(nil)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		DS.Reset()
+	}()
+
+	// step 20
+	S := c.sequence(DSsum, len(salt))
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		c.cleanSensitiveData(DSsum)
+	}()
+
+	// step 21
+	Csum := Asum
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		c.cleanSensitiveData(Asum)
+	}()
+
+	C := sha512.New()
+	for i := 0; i < rounds; i++ {
+		if (i & 1) > 0 {
+			C.Write(P)
 		} else {
 			C.Write(Csum)
 		}
-		// Add salt for numbers not divisible by 3.
-		if (i % 3) != 0 {
-			C.Write(Sseq)
+
+		if i%3 > 0 {
+			C.Write(S)
 		}
-		// Add key for numbers not divisible by 7.
-		if (i % 7) != 0 {
-			C.Write(Pseq)
+
+		if i%7 > 0 {
+			C.Write(P)
 		}
-		// Add key or last result.
-		if (i & 1) != 0 {
+
+		if i&1 > 0 {
 			C.Write(Csum)
 		} else {
-			C.Write(Pseq)
+			C.Write(P)
 		}
 
 		Csum = C.Sum(nil)
+		C.Reset()
 	}
 
-	// Clean sensitive data.
+	wg.Add(2)
 	go func() {
-		for i = 0; i < len(Pseq); i++ {
-			Pseq[i] = 0
-		}
+		defer wg.Done()
+		c.cleanSensitiveData(P)
+	}()
+	go func() {
+		defer wg.Done()
+		c.cleanSensitiveData(S)
 	}()
 
+	// step 22
+	// a)
 	out := make([]byte, 0, 123)
 	out = append(out, c.Salt.MagicPrefix...)
+	// b)
 	if isRoundsDef {
 		out = append(out, []byte("rounds="+strconv.Itoa(rounds)+"$")...)
 	}
+	// c)
 	out = append(out, salt...)
+	// d)
 	out = append(out, '$')
+	// e)
 	out = append(out, common.Base64_24Bit([]byte{
 		Csum[42], Csum[21], Csum[0],
 		Csum[1], Csum[43], Csum[22],
@@ -225,7 +232,10 @@ func (c *crypter) Generate(key, salt []byte) (string, error) {
 		Csum[63],
 	})...)
 
-	return string(out), nil
+	result = string(out)
+
+	wg.Wait()
+	return
 }
 
 func (c *crypter) Verify(hashedKey string, key []byte) error {
@@ -254,3 +264,60 @@ func (c *crypter) Cost(hashedKey string) (int, error) {
 }
 
 func (c *crypter) SetSalt(salt common.Salt) { c.Salt = salt }
+
+func (c *crypter) parseSalt(rawsalt []byte) (salt []byte, rounds int, isRoundsDef bool, err error) {
+	if !bytes.HasPrefix(rawsalt, c.Salt.MagicPrefix) {
+		err = common.ErrSaltPrefix
+		return
+	}
+
+	saltToks := bytes.SplitN(rawsalt, []byte{'$'}, 4)
+	if len(saltToks) < 3 {
+		err = common.ErrSaltFormat
+		return
+	}
+
+	if bytes.HasPrefix(saltToks[2], _rounds) {
+		salt = saltToks[3]
+		isRoundsDef = true
+
+		var pr int64
+		pr, err = strconv.ParseInt(string(saltToks[2][7:]), 10, 32)
+		if err != nil {
+			err = common.ErrSaltRounds
+			return
+		}
+
+		rounds = int(pr)
+		if rounds < RoundsMin {
+			rounds = RoundsMin
+		} else if rounds > RoundsMax {
+			rounds = RoundsMax
+		}
+	} else {
+		salt = saltToks[2]
+		rounds = RoundsDefault
+	}
+
+	if len(salt) > 16 {
+		salt = salt[0:16]
+	}
+
+	return
+}
+
+func (c *crypter) sequence(input []byte, length int) (sequence []byte) {
+	sequence = make([]byte, 0)
+	for ; length > 64; length -= 64 {
+		sequence = append(sequence, input...)
+	}
+	sequence = append(sequence, input[0:length]...)
+
+	return
+}
+
+func (c *crypter) cleanSensitiveData(b []byte) {
+	for i := 0; i < len(b); i++ {
+		b[i] = 0
+	}
+}
