@@ -93,7 +93,7 @@ func (c *crypter) Generate(key, salt []byte) (string, error) {
 	Csum := A.Sum(nil)
 
 	// Clean sensitive data.
-	go func() {
+	defer func() {
 		A.Reset()
 		Alternate.Reset()
 		for i = 0; i < len(AlternateSum); i++ {
