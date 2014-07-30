@@ -18,5 +18,7 @@ I hope you find this library to be useful and easy to use!
 
 ## Credits
 
- * [Jonas mg](https://github.com/kless)
  * [Jeramey Crawford](https://github.com/jeramey)
+ * [Jonas mg](https://github.com/kless)
+ * [DFA](https://github.com/dfa)
+ * [Kohei Yoshida](https://github.com/yosida95)
