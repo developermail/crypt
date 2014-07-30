@@ -26,10 +26,15 @@ type Crypter interface {
 	// Any error only can be got when the salt argument is not empty.
 	Generate(key, salt []byte) (string, error)
 
+	// basically calls Generate and prepends prefix string, ie. '{SHA512-CRYPT}'
+	GenerateWithPrefix(prefix string, key, salt []byte) (string, error)
+
 	// Verify compares a hashed key with its possible key equivalent.
 	// Returns nil on success, or an error on failure; if the hashed key is
 	// diffrent, the error is "ErrKeyMismatch".
 	Verify(hashedKey string, key []byte) error
+
+	VerifyWithPrefix(prefix, hashedKey string, key []byte) error
 
 	// Cost returns the hashing cost (in rounds) used to create the given hashed
 	// key.

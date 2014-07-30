@@ -106,3 +106,13 @@ func TestVerify(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerateWithPrefix(t *testing.T) {
+	hash, err := sha512Crypto.GenerateWithPrefix("{SHA512-CRYPT}", []byte("some-key"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = sha512Crypto.VerifyWithPrefix("{SHA512-CRYPT}", hash, []byte("some-key")); err != nil {
+		t.Errorf("Test %d failed: %s", "VerifyWithPrefix", []byte("some-key"))
+	}
+}
