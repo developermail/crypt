@@ -9,6 +9,7 @@ package md5
 import (
 	"bytes"
 	"crypto/md5"
+	"strings"
 
 	"github.com/developermail/crypto"
 	"github.com/developermail/crypto/common"
@@ -147,6 +148,12 @@ func (c *crypter) Generate(key, salt []byte) (string, error) {
 	return string(out), nil
 }
 
+func (c *crypter) GenerateWithPrefix(prefix string, key, salt []byte) (result string, err error) {
+	result, err = c.Generate(key, salt)
+	result = prefix + result
+	return
+}
+
 func (c *crypter) Verify(hashedKey string, key []byte) error {
 	newHash, err := c.Generate(key, []byte(hashedKey))
 	if err != nil {
@@ -156,6 +163,11 @@ func (c *crypter) Verify(hashedKey string, key []byte) error {
 		return crypto.ErrKeyMismatch
 	}
 	return nil
+}
+
+func (c *crypter) VerifyWithPrefix(prefix, hashedKey string, key []byte) error {
+	hashedKey = strings.TrimLeft(hashedKey, prefix)
+	return c.Verify(hashedKey, key)
 }
 
 func (c *crypter) Cost(hashedKey string) (int, error) { return RoundsDefault, nil }
