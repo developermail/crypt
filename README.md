@@ -1,6 +1,8 @@
 Password hashing library for Go
 ===============================
 
+[![Build Status](https://travis-ci.org/developermail/crypto.svg?branch=master)](https://travis-ci.org/developermail/crypto)
+
 The goal of crypt is to bring a library of many common and popular password
 hashing algorithms to Go and to provide a simple and consistent interface to
 each of them.
