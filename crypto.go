@@ -66,7 +66,7 @@ var crypts = make([]func() Crypter, maxCrypt)
 // packages that implement crypt functions.
 func RegisterCrypt(c Crypt, f func() Crypter, prefix string) {
 	if c >= maxCrypt {
-		panic("crypt: RegisterHash of unknown crypt function")
+		panic("crypt: RegisterHash of unknown function")
 	}
 	crypts[c] = f
 	cryptPrefixes[c] = prefix
@@ -78,7 +78,7 @@ func New(c Crypt) Crypter {
 	if f != nil {
 		return f()
 	}
-	panic("crypt: requested cryp function is unavailable")
+	panic("crypt: requested function is unavailable")
 }
 
 // NewFromHash returns a new Crypter using the prefix in the given hashed key.
@@ -96,11 +96,11 @@ func NewFromHash(hashedKey string) Crypter {
 	} else {
 		toks := strings.SplitN(hashedKey, "$", 3)
 		prefix := "$" + toks[1] + "$"
-		panic("crypt: unknown cryp function from prefix: " + prefix)
+		panic("crypt: unknown function from prefix: " + prefix)
 	}
 
 	if f != nil {
 		return f()
 	}
-	panic("crypt: requested cryp function is unavailable")
+	panic("crypt: requested function is unavailable")
 }
