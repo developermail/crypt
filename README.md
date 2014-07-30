@@ -1,5 +1,5 @@
-crypt - A password hashing library for Go
-=========================================
+Password hashing library for Go
+===============================
 
 The goal of crypt is to bring a library of many common and popular password
 hashing algorithms to Go and to provide a simple and consistent interface to
