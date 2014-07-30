@@ -10,7 +10,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/kless/crypt/common"
+	"github.com/developermail/crypt/common"
 )
 
 var ErrKeyMismatch = errors.New("hashed value is not the hash of the given password")
