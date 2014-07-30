@@ -12,6 +12,11 @@ to ensure compatibility with them.
 
 To install crypt, use the `go get` command.
 
-    go get github.com/developermail/crypt
+    go get github.com/developermail/crypto
 
 I hope you find this library to be useful and easy to use!
+
+## Credits
+
+ * [Jonas mg](https://github.com/kless)
+ * [Jeramey Crawford](https://github.com/jeramey)
