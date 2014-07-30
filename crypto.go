@@ -50,10 +50,10 @@ type Crypter interface {
 type Crypt uint
 
 const (
-	APR1   Crypt = 1 + iota // import github.com/kless/crypt/apr1_crypt
-	MD5                     // import github.com/kless/crypt/md5_crypt
-	SHA256                  // import github.com/kless/crypt/sha256_crypt
-	SHA512                  // import github.com/kless/crypt/sha512_crypt
+	APR1   Crypt = 1 + iota // import github.com/developermail/crypto/apr1
+	MD5                     // import github.com/developermail/crypto/md5
+	SHA256                  // import github.com/developermail/crypto/sha256
+	SHA512                  // import github.com/developermail/crypto/sha512
 	maxCrypt
 )
 
