@@ -2,11 +2,11 @@
 // rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package sha256_crypt
+package sha256
 
 import "testing"
 
-var sha256Crypt = New()
+var sha256Crypto = New()
 
 func TestGenerate(t *testing.T) {
 	data := []struct {
@@ -67,7 +67,7 @@ func TestGenerate(t *testing.T) {
 	}
 
 	for i, d := range data {
-		hash, err := sha256Crypt.Generate(d.key, d.salt)
+		hash, err := sha256Crypto.Generate(d.key, d.salt)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -75,7 +75,7 @@ func TestGenerate(t *testing.T) {
 			t.Errorf("Test %d failed\nExpected: %s, got: %s", i, d.out, hash)
 		}
 
-		cost, err := sha256Crypt.Cost(hash)
+		cost, err := sha256Crypto.Cost(hash)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -95,11 +95,11 @@ func TestVerify(t *testing.T) {
 		[]byte("94ajflkvjzpe8u3&*j1k513KLJ&*()"),
 	}
 	for i, d := range data {
-		hash, err := sha256Crypt.Generate(d, nil)
+		hash, err := sha256Crypto.Generate(d, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err = sha256Crypt.Verify(hash, d); err != nil {
+		if err = sha256Crypto.Verify(hash, d); err != nil {
 			t.Errorf("Test %d failed: %s", i, d)
 		}
 	}

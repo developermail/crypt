@@ -2,21 +2,21 @@
 // rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package apr1_crypt implements the standard Unix MD5-crypt algorithm created
+// Package apr1 implements the standard Unix MD5-crypt algorithm created
 // by Poul-Henning Kamp for FreeBSD, and modified by the Apache project.
 //
 // The only change from MD5-crypt is the use of the magic constant "$apr1$"
 // instead of "$1$". The algorithms are otherwise identical.
-package apr1_crypt
+package apr1
 
 import (
-	"github.com/developermail/crypt"
-	"github.com/developermail/crypt/common"
-	"github.com/developermail/crypt/md5_crypt"
+	"github.com/developermail/crypto"
+	"github.com/developermail/crypto/common"
+	"github.com/developermail/crypto/md5"
 )
 
 func init() {
-	crypt.RegisterCrypt(crypt.APR1, New, MagicPrefix)
+	crypto.RegisterCrypt(crypto.APR1, New, MagicPrefix)
 }
 
 const (
@@ -26,10 +26,10 @@ const (
 	RoundsDefault = 1000
 )
 
-var md5Crypt = md5_crypt.New()
+var md5Crypto = md5.New()
 
 func init() {
-	md5Crypt.SetSalt(common.Salt{
+	md5Crypto.SetSalt(common.Salt{
 		MagicPrefix:   []byte(MagicPrefix),
 		SaltLenMin:    SaltLenMin,
 		SaltLenMax:    SaltLenMax,
@@ -39,15 +39,15 @@ func init() {
 
 type crypter struct{ Salt common.Salt }
 
-// New returns a new crypt.Crypter computing the variant "apr1" of MD5-crypt
-func New() crypt.Crypter { return &crypter{common.Salt{}} }
+// New returns a new crypto.Crypter computing the variant "apr1" of MD5-crypt
+func New() crypto.Crypter { return &crypter{common.Salt{}} }
 
 func (c *crypter) Generate(key, salt []byte) (string, error) {
-	return md5Crypt.Generate(key, salt)
+	return md5Crypto.Generate(key, salt)
 }
 
 func (c *crypter) Verify(hashedKey string, key []byte) error {
-	return md5Crypt.Verify(hashedKey, key)
+	return md5Crypto.Verify(hashedKey, key)
 }
 
 func (c *crypter) Cost(hashedKey string) (int, error) { return RoundsDefault, nil }

@@ -2,11 +2,11 @@
 // rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package md5_crypt
+package apr1
 
 import "testing"
 
-var md5Crypt = New()
+var apr1Crypto = New()
 
 func TestGenerate(t *testing.T) {
 	data := []struct {
@@ -15,46 +15,46 @@ func TestGenerate(t *testing.T) {
 		out  string
 	}{
 		{
-			[]byte("$1$$"),
+			[]byte("$apr1$$"),
 			[]byte("abcdefghijk"),
-			"$1$$pL/BYSxMXs.jVuSV1lynn1",
+			"$apr1$$NTjzQjNZnhYRPxN6ryN191",
 		},
 		{
-			[]byte("$1$an overlong salt$"),
-			[]byte("abcdfgh"),
-			"$1$an overl$ZYftmJDIw8sG5s4gG6r.70",
+			[]byte("$apr1$an overlong salt$"),
+			[]byte("abcdefgh"),
+			"$apr1$an overl$iroRZrWCEoQojCkf6p8LC0",
 		},
 		{
-			[]byte("$1$12345678$"),
+			[]byte("$apr1$12345678$"),
 			[]byte("Lorem ipsum dolor sit amet"),
-			"$1$12345678$Suzx8CrBlkNJwVHHHv5tZ.",
+			"$apr1$12345678$/DpfgRGBHG8N0cbkmw0Fk/",
 		},
 		{
-			[]byte("$1$deadbeef$"),
+			[]byte("$apr1$deadbeef$"),
 			[]byte("password"),
-			"$1$deadbeef$Q7g0UO4hRC0mgQUQ/qkjZ0",
+			"$apr1$deadbeef$NWLhx1Ai4ScyoaAboTFco.",
 		},
 		{
-			[]byte("$1$$"),
+			[]byte("$apr1$$"),
 			[]byte("missing salt"),
-			"$1$$Lv61fbMiEGprscPkdE9Iw/",
+			"$apr1$$EcorjwkoQz4mYcksVEk6j0",
 		},
 		{
-			[]byte("$1$holy-moly-batman$"),
+			[]byte("$apr1$holy-moly-batman$"),
 			[]byte("1234567"),
-			"$1$holy-mol$WKomB0dWknSxdW/e8WYHG0",
+			"$apr1$holy-mol$/WX0350ZUEkvQkrrVJsrU.",
 		},
 		{
-			[]byte("$1$asdfjkl;$"),
-			[]byte("A really long password. Longer " +
-				"than a password has any right to be" +
-				". Hey bub, don't mess with this password."),
-			"$1$asdfjkl;$DUqPhKwbK4smV0aEMyDdx/",
+			[]byte("$apr1$asdfjkl;$"),
+			[]byte("A really long password. " +
+				"Longer than a password has any righ" +
+				"t to be. Hey bub, don't mess with t" +
+				"his password."),
+			"$apr1$asdfjkl;$2MbDUb/Bj6qcIIf38PXzp0",
 		},
 	}
-
 	for i, d := range data {
-		hash, err := md5Crypt.Generate(d.key, d.salt)
+		hash, err := apr1Crypto.Generate(d.key, d.salt)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -74,11 +74,11 @@ func TestVerify(t *testing.T) {
 		[]byte("94ajflkvjzpe8u3&*j1k513KLJ&*()"),
 	}
 	for i, d := range data {
-		hash, err := md5Crypt.Generate(d, nil)
+		hash, err := apr1Crypto.Generate(d, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err = md5Crypt.Verify(hash, d); err != nil {
+		if err = apr1Crypto.Verify(hash, d); err != nil {
 			t.Errorf("Test %d failed: %s", i, d)
 		}
 	}

@@ -4,13 +4,13 @@
 
 // Package crypt provides interface for password crypt functions and collects
 // common constants.
-package crypt
+package crypto
 
 import (
 	"errors"
 	"strings"
 
-	"github.com/developermail/crypt/common"
+	"github.com/developermail/crypto/common"
 )
 
 var ErrKeyMismatch = errors.New("hashed value is not the hash of the given password")

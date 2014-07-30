@@ -7,7 +7,7 @@
 //
 // The specification for this algorithm can be found here:
 // http://www.akkadia.org/drepper/SHA-crypt.txt
-package sha256_crypt
+package sha256
 
 import (
 	"bytes"
@@ -15,12 +15,12 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/developermail/crypt"
-	"github.com/developermail/crypt/common"
+	"github.com/developermail/crypto"
+	"github.com/developermail/crypto/common"
 )
 
 func init() {
-	crypt.RegisterCrypt(crypt.SHA256, New, MagicPrefix)
+	crypto.RegisterCrypt(crypto.SHA256, New, MagicPrefix)
 }
 
 const (
@@ -36,8 +36,8 @@ var _rounds = []byte("rounds=")
 
 type crypter struct{ Salt common.Salt }
 
-// New returns a new crypt.Crypter computing the SHA256-crypt password hashing.
-func New() crypt.Crypter {
+// New returns a new crypto.Crypter computing the SHA256-crypt password hashing.
+func New() crypto.Crypter {
 	return &crypter{
 		common.Salt{
 			MagicPrefix:   []byte(MagicPrefix),
@@ -233,7 +233,7 @@ func (c *crypter) Verify(hashedKey string, key []byte) error {
 		return err
 	}
 	if newHash != hashedKey {
-		return crypt.ErrKeyMismatch
+		return crypto.ErrKeyMismatch
 	}
 	return nil
 }

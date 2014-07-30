@@ -2,20 +2,20 @@
 // rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package md5_crypt implements the standard Unix MD5-crypt algorithm created by
+// Package md5 implements the standard Unix MD5-crypt algorithm created by
 // Poul-Henning Kamp for FreeBSD.
-package md5_crypt
+package md5
 
 import (
 	"bytes"
 	"crypto/md5"
 
-	"github.com/developermail/crypt"
-	"github.com/developermail/crypt/common"
+	"github.com/developermail/crypto"
+	"github.com/developermail/crypto/common"
 )
 
 func init() {
-	crypt.RegisterCrypt(crypt.MD5, New, MagicPrefix)
+	crypto.RegisterCrypt(crypto.MD5, New, MagicPrefix)
 }
 
 // NOTE: Cisco IOS only allows salts of length 4.
@@ -29,8 +29,8 @@ const (
 
 type crypter struct{ Salt common.Salt }
 
-// New returns a new crypt.Crypter computing the MD5-crypt password hashing.
-func New() crypt.Crypter {
+// New returns a new crypto.Crypter computing the MD5-crypt password hashing.
+func New() crypto.Crypter {
 	return &crypter{
 		common.Salt{
 			MagicPrefix:   []byte(MagicPrefix),
@@ -153,7 +153,7 @@ func (c *crypter) Verify(hashedKey string, key []byte) error {
 		return err
 	}
 	if newHash != hashedKey {
-		return crypt.ErrKeyMismatch
+		return crypto.ErrKeyMismatch
 	}
 	return nil
 }
