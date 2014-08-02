@@ -6,9 +6,7 @@ package sha512
 
 import "testing"
 
-var sha512Crypto = New()
-
-func TestGenerate(t *testing.T) {
+func TestNew(t *testing.T) {
 	data := []struct {
 		salt []byte
 		key  []byte
@@ -20,7 +18,7 @@ func TestGenerate(t *testing.T) {
 			[]byte("Hello world!"),
 			"$6$saltstring$svn8UoSVapNtMuq1ukKS4tPQd8iKwSMHWjl/O817G3uBnIFNjn" +
 				"QJuesI68u4OTLiBFdcbYEdFCoEOfaS35inz1",
-			RoundsDefault,
+			5000,
 		},
 		{
 			[]byte("$6$rounds=10000$saltstringsaltstring"),
@@ -59,17 +57,10 @@ func TestGenerate(t *testing.T) {
 				"PwcelCjmw2kSYu.Ec6ycULevoBK25fs2xXgMNrCzIMVcgEJAstJeonj1",
 			123456,
 		},
-		{
-			[]byte("$6$rounds=10$roundstoolow"),
-			[]byte("the minimum number is still observed"),
-			"$6$rounds=1000$roundstoolow$kUMsbe306n21p9R.FRkW3IGn.S9NPN0x50Yh" +
-				"H1xhLsPuWGsUSklZt58jaTfF4ZEQpyUNGc0dqbpBYYBaHHrsX.",
-			1000,
-		},
 	}
 
 	for i, d := range data {
-		hash, err := sha512Crypto.Generate(d.key, d.salt)
+		hash, err := New(d.key, d.salt)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -77,7 +68,7 @@ func TestGenerate(t *testing.T) {
 			t.Errorf("Test %d failed\nExpected: %s, got: %s", i, d.out, hash)
 		}
 
-		cost, err := sha512Crypto.Cost(hash)
+		cost, err := Cost(hash)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -88,6 +79,7 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestVerify(t *testing.T) {
+	salt := []byte("$6$saltstring")
 	data := [][]byte{
 		[]byte("password"),
 		[]byte("12345"),
@@ -97,22 +89,33 @@ func TestVerify(t *testing.T) {
 		[]byte("94ajflkvjzpe8u3&*j1k513KLJ&*()"),
 	}
 	for i, d := range data {
-		hash, err := sha512Crypto.Generate(d, nil)
+		hash, err := New(d, salt)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err = sha512Crypto.Verify(hash, d); err != nil {
-			t.Errorf("Test %d failed: %s", i, d)
+		if err = Verify(hash, d); err != nil {
+			t.Errorf("Test %d failed: %s", "Verify", i, d)
 		}
 	}
 }
 
-func TestGenerateWithPrefix(t *testing.T) {
-	hash, err := sha512Crypto.GenerateWithPrefix("{SHA512-CRYPT}", []byte("some-key"), nil)
-	if err != nil {
-		t.Fatal(err)
+func TestNewWithPrefix(t *testing.T) {
+	salt := []byte("$6$saltstring")
+	data := [][]byte{
+		[]byte("password"),
+		[]byte("12345"),
+		[]byte("That's amazing! I've got the same combination on my luggage!"),
+		[]byte("And change the combination on my luggage!"),
+		[]byte("         random  spa  c    ing."),
+		[]byte("94ajflkvjzpe8u3&*j1k513KLJ&*()"),
 	}
-	if err = sha512Crypto.VerifyWithPrefix("{SHA512-CRYPT}", hash, []byte("some-key")); err != nil {
-		t.Errorf("Test %d failed: %s", "VerifyWithPrefix", []byte("some-key"))
+	for i, d := range data {
+		hash, err := NewWithPrefix("{SHA512-CRYPT}", d, salt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = VerifyWithPrefix("{SHA512-CRYPT}", hash, d); err != nil {
+			t.Errorf("Test %d failed: %s", "VerifyWithPrefix", i, d)
+		}
 	}
 }

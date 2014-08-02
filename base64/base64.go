@@ -2,7 +2,7 @@
 // rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package common
+package base64
 
 const alphabet = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
@@ -18,7 +18,7 @@ const alphabet = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwx
 //   4. Top 6 bits of the third byte.
 //
 // This encoding method does not emit padding bytes as Base64 does.
-func Base64_24Bit(src []byte) (hash []byte) {
+func Encode24Bit(src []byte) (hash []byte) {
 	if len(src) == 0 {
 		return []byte{} // TODO: return nil
 	}
