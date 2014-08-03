@@ -17,3 +17,4 @@ To install crypto, use the `go get` command.
  * [Jonas mg](https://github.com/kless)
  * [DFA](https://github.com/dfa)
  * [Kohei Yoshida](https://github.com/yosida95)
+ * [Chris Aumann](https://github.com/chr4)
