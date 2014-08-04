@@ -21,8 +21,6 @@ import (
 	"github.com/developermail/crypt/salt"
 )
 
-var roundsPrefix = []byte("rounds=")
-
 // New()
 func New(key, s []byte) (result string, err error) {
 	var (
@@ -31,8 +29,7 @@ func New(key, s []byte) (result string, err error) {
 		isRoundsDef bool
 	)
 
-	// TODO: source out parseSalt() to salt.Parse()
-	s, rounds, isRoundsDef, err = parseSalt(s)
+	s, rounds, isRoundsDef, err = salt.Parse(s)
 	if err != nil {
 		return
 	}
@@ -237,48 +234,12 @@ func Cost(hashedKey string) (int, error) {
 		return 0, salt.ErrSaltFormat
 	}
 
-	if !bytes.HasPrefix(saltToks[2], roundsPrefix) {
+	if !bytes.HasPrefix(saltToks[2], salt.RoundsPrefix) {
 		return salt.RoundsDefault, nil
 	}
 	roundToks := bytes.Split(saltToks[2], []byte{'='})
 	cost, err := strconv.ParseInt(string(roundToks[1]), 10, 0)
 	return int(cost), err
-}
-
-func parseSalt(rawsalt []byte) (s []byte, rounds int, isRoundsDef bool, err error) {
-	if !bytes.HasPrefix(rawsalt, salt.MagicPrefix) {
-		err = salt.ErrSaltPrefix
-		return
-	}
-
-	saltToks := bytes.SplitN(rawsalt, []byte{'$'}, 4)
-	if len(saltToks) < 3 {
-		err = salt.ErrSaltFormat
-		return
-	}
-
-	if bytes.HasPrefix(saltToks[2], roundsPrefix) {
-		s = saltToks[3]
-		isRoundsDef = true
-
-		var pr int64
-		pr, err = strconv.ParseInt(string(saltToks[2][7:]), 10, 32)
-		if err != nil {
-			err = salt.ErrSaltRounds
-			return
-		}
-
-		rounds = int(pr)
-	} else {
-		s = saltToks[2]
-		rounds = salt.RoundsDefault
-	}
-
-	if len(s) > 16 {
-		s = s[0:16]
-	}
-
-	return
 }
 
 func sequence(input []byte, length int) (sequence []byte) {
