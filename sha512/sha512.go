@@ -21,7 +21,7 @@ import (
 	"github.com/developermail/crypt/salt"
 )
 
-var _rounds = []byte("rounds=")
+var roundsPrefix = []byte("rounds=")
 
 // New()
 func New(key, s []byte) (result string, err error) {
@@ -237,7 +237,7 @@ func Cost(hashedKey string) (int, error) {
 		return 0, salt.ErrSaltFormat
 	}
 
-	if !bytes.HasPrefix(saltToks[2], _rounds) {
+	if !bytes.HasPrefix(saltToks[2], roundsPrefix) {
 		return salt.RoundsDefault, nil
 	}
 	roundToks := bytes.Split(saltToks[2], []byte{'='})
@@ -257,7 +257,7 @@ func parseSalt(rawsalt []byte) (s []byte, rounds int, isRoundsDef bool, err erro
 		return
 	}
 
-	if bytes.HasPrefix(saltToks[2], _rounds) {
+	if bytes.HasPrefix(saltToks[2], roundsPrefix) {
 		s = saltToks[3]
 		isRoundsDef = true
 
