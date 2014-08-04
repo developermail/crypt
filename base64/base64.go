@@ -6,7 +6,7 @@ package base64
 
 const alphabet = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-// Base64_24Bit is a variant of Base64 encoding, commonly used with password
+// Encode24Bit() is a variant of Base64 encoding, commonly used with password
 // hashing algorithms to encode the result of their checksum output.
 //
 // The algorithm operates on up to 3 bytes at a time, encoding the following
