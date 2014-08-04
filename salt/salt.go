@@ -13,10 +13,6 @@ import (
 )
 
 var (
-	ErrSaltPrefix = errors.New("invalid magic prefix")
-	ErrSaltFormat = errors.New("invalid salt format")
-	ErrSaltRounds = errors.New("invalid rounds")
-
 	MagicPrefix   = []byte("$6$")
 	RoundsDefault = 5000
 	RoundsPrefix  = []byte("rounds=")
@@ -46,13 +42,13 @@ func New(length, rounds int) []byte {
 
 func Parse(rawsalt []byte) (s []byte, rounds int, isRoundsDef bool, err error) {
 	if !bytes.HasPrefix(rawsalt, MagicPrefix) {
-		err = ErrSaltPrefix
+		err = errors.New("Invalid magic prefix")
 		return
 	}
 
 	saltToks := bytes.SplitN(rawsalt, []byte{'$'}, 4)
 	if len(saltToks) < 3 {
-		err = ErrSaltFormat
+		err = errors.New("Invalid salt format")
 		return
 	}
 
@@ -63,7 +59,7 @@ func Parse(rawsalt []byte) (s []byte, rounds int, isRoundsDef bool, err error) {
 		var pr int64
 		pr, err = strconv.ParseInt(string(saltToks[2][7:]), 10, 32)
 		if err != nil {
-			err = ErrSaltRounds
+			err = errors.New("Invalid rounds")
 			return
 		}
 

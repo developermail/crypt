@@ -231,7 +231,7 @@ func VerifyWithPrefix(prefix, hashedKey string, key []byte) error {
 func Cost(hashedKey string) (int, error) {
 	saltToks := bytes.Split([]byte(hashedKey), []byte{'$'})
 	if len(saltToks) < 3 {
-		return 0, salt.ErrSaltFormat
+		return 0, errors.New("Invalid salt format")
 	}
 
 	if !bytes.HasPrefix(saltToks[2], salt.RoundsPrefix) {
