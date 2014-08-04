@@ -17,8 +17,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/developermail/crypto/base64"
-	"github.com/developermail/crypto/salt"
+	"github.com/developermail/crypt/base64"
+	"github.com/developermail/crypt/salt"
 )
 
 var _rounds = []byte("rounds=")

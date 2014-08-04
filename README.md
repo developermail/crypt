@@ -1,15 +1,15 @@
 Password hashing library for Go
 ===============================
 
-[![Build Status](https://travis-ci.org/developermail/crypto.svg?branch=master)](https://travis-ci.org/developermail/crypto)
+[![Build Status](https://travis-ci.org/developermail/crypt.svg?branch=master)](https://travis-ci.org/developermail/crypt)
 
-The goal of crypto is to bring a library of many common and popular password
+The goal of crypt is to bring a library of many common and popular password
 hashing algorithms to Go and to provide a simple and consistent interface to
 each of them.
 
-To install crypto, use the `go get` command.
+To install crypt, use the `go get` command.
 
-    go get github.com/developermail/crypto
+    go get github.com/developermail/crypt
 
 ## Credits
 

@@ -7,7 +7,7 @@ package salt
 import (
 	"crypto/rand"
 	"errors"
-	"github.com/developermail/crypto/base64"
+	"github.com/developermail/crypt/base64"
 	"strconv"
 )
 
