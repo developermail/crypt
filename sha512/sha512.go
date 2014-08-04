@@ -21,7 +21,7 @@ import (
 	"github.com/developermail/crypt/salt"
 )
 
-// New()
+// New() creates a sha512-crypt hash of key, using salt s
 func New(key, s []byte) (result string, err error) {
 	var (
 		wg          sync.WaitGroup
