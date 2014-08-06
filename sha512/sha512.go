@@ -33,12 +33,12 @@ func New(key, s []byte) (result []byte, err error) {
 		return
 	}
 
-	// step 1-3
+	// Step 1-3
 	A := sha512.New()
 	A.Write(key)
 	A.Write(s)
 
-	// step 4-8
+	// Step 4-8
 	B := sha512.New()
 	B.Write(key)
 	B.Write(s)
@@ -51,10 +51,10 @@ func New(key, s []byte) (result []byte, err error) {
 		B.Reset()
 	}()
 
-	// step 9-10
+	// Step 9-10
 	A.Write(sequence(Bsum, len(key)))
 
-	// step 11-12
+	// Step 11-12
 	for i := len(key); i > 0; i >>= 1 {
 		if (i & 1) != 0 {
 			A.Write(Bsum)
@@ -70,7 +70,7 @@ func New(key, s []byte) (result []byte, err error) {
 		A.Reset()
 	}()
 
-	// step 13-15
+	// Step 13-15
 	DP := sha512.New()
 	for i := 0; i < len(key); i++ {
 		DP.Write(key)
@@ -83,7 +83,7 @@ func New(key, s []byte) (result []byte, err error) {
 		DP.Reset()
 	}()
 
-	// step 16
+	// Step 16
 	P := sequence(DPsum, len(key))
 
 	wg.Add(1)
@@ -92,7 +92,7 @@ func New(key, s []byte) (result []byte, err error) {
 		cleanSensitiveData(DPsum)
 	}()
 
-	// step 17-19
+	// Step 17-19
 	DS := sha512.New()
 	for i := 0; i < 16+int(Asum[0]); i++ {
 		DS.Write(s)
@@ -105,7 +105,7 @@ func New(key, s []byte) (result []byte, err error) {
 		DS.Reset()
 	}()
 
-	// step 20
+	// Step 20
 	S := sequence(DSsum, len(s))
 
 	wg.Add(1)
@@ -114,7 +114,7 @@ func New(key, s []byte) (result []byte, err error) {
 		cleanSensitiveData(DSsum)
 	}()
 
-	// step 21
+	// Step 21
 	Csum := Asum
 
 	wg.Add(1)
@@ -159,7 +159,7 @@ func New(key, s []byte) (result []byte, err error) {
 		cleanSensitiveData(S)
 	}()
 
-	// step 22
+	// Step 22
 	// a)
 	result = make([]byte, 0, 123)
 	result = append(result, salt.MagicPrefix...)
