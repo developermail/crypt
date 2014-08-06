@@ -14,7 +14,6 @@ import (
 	"crypto/sha512"
 	"errors"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/developermail/crypt/base64"
@@ -22,7 +21,7 @@ import (
 )
 
 // New() creates a sha512-crypt hash of key, using salt s
-func New(key, s []byte) (result string, err error) {
+func New(key, s []byte) (result []byte, err error) {
 	var (
 		wg          sync.WaitGroup
 		rounds      int
@@ -162,18 +161,18 @@ func New(key, s []byte) (result string, err error) {
 
 	// step 22
 	// a)
-	out := make([]byte, 0, 123)
-	out = append(out, salt.MagicPrefix...)
+	result = make([]byte, 0, 123)
+	result = append(result, salt.MagicPrefix...)
 	// b)
 	if isRoundsDef {
-		out = append(out, []byte("rounds="+strconv.Itoa(rounds)+"$")...)
+		result = append(result, []byte("rounds="+strconv.Itoa(rounds)+"$")...)
 	}
 	// c)
-	out = append(out, s...)
+	result = append(result, s...)
 	// d)
-	out = append(out, '$')
+	result = append(result, '$')
 	// e)
-	out = append(out, base64.Encode24Bit([]byte{
+	result = append(result, base64.Encode24Bit([]byte{
 		Csum[42], Csum[21], Csum[0],
 		Csum[1], Csum[43], Csum[22],
 		Csum[23], Csum[2], Csum[44],
@@ -198,38 +197,38 @@ func New(key, s []byte) (result string, err error) {
 		Csum[63],
 	})...)
 
-	result = string(out)
-
 	wg.Wait()
 	return
 }
 
-// NewWithPrefix() calls New() but prepends a string to the result
-func NewWithPrefix(prefix string, key, s []byte) (result string, err error) {
+// NewWithPrefix() calls New() and prepends prefix to result
+func NewWithPrefix(prefix string, key, s []byte) (result []byte, err error) {
 	result, err = New(key, s)
-	result = prefix + result
+	result = append([]byte(prefix), result...)
 	return
 }
 
-func Verify(hashedKey string, key []byte) error {
-	newHash, err := New(key, []byte(hashedKey))
+// Verify() checks whether key is valid for hash hashedKey
+func Verify(hash, key []byte) (ok bool, err error) {
+	newHash, err := New(key, hash)
 	if err != nil {
-		return err
+		return false, err
 	}
-	if newHash != hashedKey {
-		return errors.New("Hashed value is not the hash of the given password")
+	if bytes.Compare(newHash, hash) != 0 {
+		// key doesn't match the given hash
+		return false, nil
 	}
-	return nil
+	return true, nil
 }
 
 // VerifyWithPrefix() verifies a hash prefixed with a string
-func VerifyWithPrefix(prefix, hashedKey string, key []byte) error {
-	hashedKey = strings.TrimLeft(hashedKey, prefix)
-	return Verify(hashedKey, key)
+func VerifyWithPrefix(prefix string, hashWithPrefix, key []byte) (ok bool, err error) {
+	hash := bytes.TrimLeft(hashWithPrefix, prefix)
+	return Verify(hash, key)
 }
 
-func Cost(hashedKey string) (int, error) {
-	saltToks := bytes.Split([]byte(hashedKey), []byte{'$'})
+func Cost(hash []byte) (int, error) {
+	saltToks := bytes.Split(hash, []byte{'$'})
 	if len(saltToks) < 3 {
 		return 0, errors.New("Invalid salt format")
 	}
